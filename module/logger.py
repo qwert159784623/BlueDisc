@@ -67,7 +67,7 @@ class MLFlowLogger:
         os.makedirs(artifact_dir, exist_ok=True)
 
         # Create file path
-        file_path = os.path.join(artifact_dir, f"{data_type}_step{step}.txt")
+        file_path = os.path.join(artifact_dir, f"{data_type}_step{step:0>7}.txt")
 
         # Save text to file
         if isinstance(text, (list, tuple)):
