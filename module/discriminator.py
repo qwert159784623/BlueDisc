@@ -47,15 +47,7 @@ class DBuilder:
         }
 
     def build(self, d_model_name, learning_rate):
-        # Use proper device detection: CUDA > MPS > CPU
-        if torch.cuda.is_available():
-            device = torch.device("cuda:0")
-        elif torch.backends.mps.is_available():
-            device = torch.device("mps")
-        else:
-            device = torch.device("cpu")
-
-        d_model = Discriminator().to(device)
+        d_model = Discriminator()
 
         if not learning_rate:
             learning_rate = self.model_dict[d_model_name]["lr"]
@@ -67,7 +59,6 @@ class DBuilder:
             betas=(0.0, 0.999),
         )
 
-        d_model.device = device
 
         return d_model
 

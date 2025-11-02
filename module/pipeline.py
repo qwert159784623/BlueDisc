@@ -7,9 +7,8 @@ from module.labeler import TaperedDetectionLabeller
 
 
 class AugmentationsBuilder:
-    def __init__(self, dataset, label_type="D"):
+    def __init__(self, dataset):
         self.dataset = dataset
-        self.label_type = label_type
         self.phase_dict, self.p_phases, self.s_phases = self.get_phase()
 
         detection_labeller = TaperedDetectionLabeller(

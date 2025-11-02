@@ -5,8 +5,6 @@ import torch
 class BaseGenerator(torch.nn.Module):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if torch.cuda.is_available():
-            self.cuda()
 
         self.phase_order = "PSN"
         self.current_steps = 0

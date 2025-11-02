@@ -7,23 +7,6 @@ from seisbench.generate.labeling import SupervisedLabeller, gaussian_pick
 class TaperedDetectionLabeller(SupervisedLabeller):
     """
     Modified version of DetectionLabeller that adds Gaussian tails to detections.
-
-    Create detection labels from picks.
-    The labeler can either use fixed detection length or determine the length from the P to S time as in
-    Mousavi et al. (2020, Nature communications). In the latter case, detections range from P to S + factor * (S - P)
-    and are only annotated if both P and S phases are present.
-    All detections are represented through a boxcar time series with the same length as the input waveforms.
-    For both P and S, lists of phases can be passed of which the sequentially first one will be used.
-    All picks with NaN sample are treated as not present.
-
-    :param p_phases: (List of) P phase metadata columns
-    :type p_phases: str, list[str]
-    :param s_phases: (List of) S phase metadata columns
-    :type s_phases: str, list[str]
-    :param factor: Factor for length of window after S onset
-    :type factor: float
-    :param fixed_window: Number of samples for fixed window detections. If none, will determine length from P to S time.
-    :type fixed_window: int
     """
 
     def __init__(

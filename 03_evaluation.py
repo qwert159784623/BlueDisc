@@ -46,7 +46,6 @@ precise_confidence = 0.7
 precise_tolerance = 10
 min_peak_distance = 100
 
-# remove existing matching results directory if it exists
 matching_results_path = os.path.join(base_path, data_split, "matching_results")
 if os.path.exists(matching_results_path):
     shutil.rmtree(matching_results_path)
@@ -88,7 +87,6 @@ def process_step(step):
         labels, confidence=match_confidence, distance=min_peak_distance
     )
 
-    # 配對peaks並計算誤差
     matching_results_dataframe = match_peaks_and_calculate_errors(
         pred_picks,
         label_picks,

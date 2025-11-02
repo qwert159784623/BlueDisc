@@ -41,7 +41,7 @@ if __name__ == "__main__":
     seed_manager = RandomSeedManager(seed_value)
     seed_manager.set_seed()
 
-    # 初始化設備管理器
+    # Initialize device manager
     device_manager = DeviceManager(args.device)
 
     sample_size = args.sample_size
@@ -51,17 +51,23 @@ if __name__ == "__main__":
     gan_loss_weight = args.gan_weight
     if not args.gan_type:
         gan_loss_weight = 0
-        args.data_weight = 1  # 沒有 GAN 條件下強制設定 data_weight 為 1
+        args.data_weight = 1  # If no GAN is specified, force data_weight to 1
 
-    # 構建生成器和判別器模型
+    # Build generator and discriminator models
     g_builder = GBuilder()
     g_model = g_builder.build(args.g_model, args.label, args.g_lr)
+
+    # Move generator to device
+    g_model = device_manager.move_to_device(g_model)
 
     d_model = None
 
     if args.d_model:
         d_builder = DBuilder()
         d_model = d_builder.build(args.d_model, args.d_lr)
+
+        # Move discriminator to device
+        d_model = device_manager.move_to_device(d_model)
 
     project_root = os.getcwd()
 
@@ -71,7 +77,7 @@ if __name__ == "__main__":
 
     mlflow.set_tracking_uri(f"http://{mlflow_host}:{mlflow_port}")
 
-    # 設定實驗名稱
+    # Set experiment name
     experient_name = f"{args.g_model}_{args.label}"
 
     if d_model:
@@ -86,7 +92,7 @@ if __name__ == "__main__":
     mlflow.set_experiment(experient_name)
     print(f"Experient: {experient_name}")
 
-    # 動態載入資料集
+    # Dynamically load the dataset
     data_class = getattr(sbd, args.dataset)
     data = data_class(sampling_rate=100)
 
@@ -98,7 +104,7 @@ if __name__ == "__main__":
     train_generator = sbg.GenericGenerator(train)
     dev_generator = sbg.GenericGenerator(dev)
 
-    aug_builder = AugmentationsBuilder(dataset=data, label_type=args.label)
+    aug_builder = AugmentationsBuilder(dataset=data)
     augmentations = aug_builder.build()
 
     train_generator.add_augmentations(augmentations)
@@ -110,7 +116,7 @@ if __name__ == "__main__":
     if args.batch_size is None:
         raise ValueError("Batch size must be specified and should be an integer.")
 
-    num_workers = os.cpu_count() or 1  # Ensure num_workers defaults to 1 if os.cpu_count() returns None
+    num_workers = os.cpu_count() or 1
 
     train_loader = DataLoader(
         train_generator,
@@ -134,7 +140,7 @@ if __name__ == "__main__":
         generator=g,
     )
 
-    # 取得 dev set 的 sample data
+    # Get sample data from the dev set
     test_samples = next(iter(dev_loader))
     trace_name = test_samples.pop("trace_name", "")
     label = g_model.reorder_label_phase(test_samples)
@@ -143,7 +149,7 @@ if __name__ == "__main__":
         current_run = mlflow.active_run()
         run_id = current_run.info.run_id
 
-        # Initialize logger with the run_id
+        # Initialize logger
         logger = MLFlowLogger(
             run_id=run_id,
             mlflow_host=mlflow_host,
@@ -159,12 +165,10 @@ if __name__ == "__main__":
             gan_loss_weight=gan_loss_weight,
             logger=logger,
         )
+        print(f"Models on device: {device_manager.device}")
         print("compile model")
         gan_model = torch.compile(gan_model)
 
-        # Move model to device
-        gan_model = device_manager.move_to_device(gan_model)
-        print(f"Model moved to device: {device_manager.device}")
 
         # Log parameters
         logger.log_param("gan_type", args.gan_type)

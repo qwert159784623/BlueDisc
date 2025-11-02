@@ -12,12 +12,14 @@ from module.gan_model import GANModel
 from module.logger import MLFlowLogger
 from module.pipeline import AugmentationsBuilder
 from module.random_seed import RandomSeedManager
+from module.device_manager import DeviceManager
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--run-id", type=str, required=True)
     parser.add_argument("--step", type=int)
     parser.add_argument("--epoch", type=int)
+    parser.add_argument("--device", type=str, default="auto")
     parser.add_argument(
         "--data-split",
         type=str,
@@ -31,6 +33,10 @@ if __name__ == "__main__":
     seed_manager = RandomSeedManager(seed_value)
     seed_manager.set_seed()
 
+    # Initialize device manager
+    device_manager = DeviceManager(args.device)
+    print(f"Using device: {device_manager.device}")
+
     # MLflow settings - using local setup
     mlflow_host = "127.0.0.1"
     mlflow_port = 5000
@@ -43,7 +49,6 @@ if __name__ == "__main__":
     # Initialize logger
     logger = MLFlowLogger(
         run_id=run_id,
-        log_training=False,
         mlflow_host=mlflow_host,
         mlflow_port=mlflow_port
     )
@@ -53,7 +58,12 @@ if __name__ == "__main__":
 
     gan_model = GANModel()
     gan_model.load_checkpoint_by_dir(checkpoint_dir, step=args.step, epoch=args.epoch)
-    g_model = gan_model.g_model
+
+    # Move models to device
+    g_model = device_manager.move_to_device(gan_model.g_model)
+
+    if gan_model.d_model:
+        gan_model.d_model = device_manager.move_to_device(gan_model.d_model)
 
     # Load dataset
     data = sbd.InstanceCounts(sampling_rate=100)
@@ -68,7 +78,7 @@ if __name__ == "__main__":
     g = torch.Generator()
     g.manual_seed(seed_value)
 
-    num_workers = os.cpu_count() or 1  # Handle None case
+    num_workers = os.cpu_count() or 1
 
     test_loader = DataLoader(
         test_generator,
@@ -82,7 +92,7 @@ if __name__ == "__main__":
     )
 
 
-    size = len(test_generator)  # Use generator length instead of loader.dataset
+    size = len(test_generator)
     batch_size = test_loader.batch_size
     gan_model.eval()
     with torch.no_grad():

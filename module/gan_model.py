@@ -200,8 +200,8 @@ class GANModel(torch.nn.Module):
                 sample_D_real = sample_D_real.detach().cpu().numpy()
                 sample_D_fake = sample_D_fake.detach().cpu().numpy()
 
-                self.logger.log_samples_metrics(sample_D_real, "Dreal", self.steps)
-                self.logger.log_samples_metrics(sample_D_fake, "Dfake", self.steps)
+                self.logger.log_samples_metrics(sample_D_real, "D_real", self.steps)
+                self.logger.log_samples_metrics(sample_D_fake, "D_fake", self.steps)
 
             sample_pred = sample_pred.detach().cpu().numpy()
             sample_loss = sample_loss.detach().cpu().numpy()
