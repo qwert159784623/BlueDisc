@@ -9,18 +9,17 @@ This repository reproduces the paper’s key finding: a cGAN-based shape-then-al
 
 1) Start MLflow
 ```bash
-mlflow server --host 127.0.0.1 --port 5000 \
-  --backend-store-uri ./mlruns --default-artifact-root ./mlruns
+mlflow ui
 ```
 2) Train (hybrid, λ=4000, 10k steps)
 ```bash
-python 01_training.py --label N --dataset InstanceCount \
+python 01_training.py --label N --dataset InstanceCounts \
   --data-weight 4000 --batch-size 100 --max-steps 10000
 ```
 3) Get the `run_id` from MLflow UI or `mlruns/*/*/meta.yaml`
 4) Inference (dev split)
 ```bash
-python 02_inference.py --run-id <RUN_ID> --dataset InstanceCount
+python 02_inference.py --run-id <RUN_ID> --dataset InstanceCounts
 ```
 5) Evaluate (dev split)
 ```bash
