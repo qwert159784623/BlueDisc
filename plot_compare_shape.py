@@ -31,7 +31,6 @@ def _color_palette(color=1, shade=1):
 
 def plot_sample_for_steps(sample_id):
     """Plot all specified steps for a given sample_id in one figure with shared x-axis"""
-    # 使用單一 run 來設置基本參數和路徑
     current_run = client.get_run(args.run_id)
     experiment_id = current_run.info.experiment_id
     experiment_name = client.get_experiment(experiment_id).name
@@ -48,7 +47,7 @@ def plot_sample_for_steps(sample_id):
     sample_rate = 100
     confidence = 0.7
 
-    # 載入 waveform 和 label 數據
+    # Load waveform and label data
     sample_waveform = os.path.join(
         base_path, args.data_split, "waveform", "waveform_0000000.h5"
     )
@@ -59,34 +58,28 @@ def plot_sample_for_steps(sample_id):
     with h5py.File(label_file, "r") as f:
         run_label_data = f["data"][sample_id]
 
-    # 計算子圖數量：1個波形圖 + steps數量的預測圖
+    # Calculate number of subplots: 1 waveform plot + prediction plots for each step
     num_steps = len(args.steps)
     total_subplots = 1 + num_steps
 
-    # 設定 DPI 和 figsize
     dpi = 150
     width_inches = 10
-    height_inches = (3 + (num_steps * 2.5)) / 2  # 將整體高度減少一半
+    height_inches = (3 + (num_steps * 2.5)) / 2
 
-    # 創建 figure 和 GridSpec
+    # Create figure and GridSpec
     fig = plt.figure(figsize=(width_inches, height_inches), dpi=dpi)
 
-    # 使用 GridSpec 來控制布局
-    # height_ratios: 地震波圖片佔 1 個單位（縮減一半），每個預測圖佔 1 個單位
     height_ratios = [1] + [1] * num_steps
-    # 設定間距：地震波圖片下方有較大間距，預測圖之間間距較小
-    hspace_values = [0.3] + [0.05] * (
-        num_steps - 1
-    )  # 地震波與預測圖間距 0.3，預測圖間距 0.05
+    hspace_values = [0.3] + [0.05] * (num_steps - 1)
 
     gs = gridspec.GridSpec(
         total_subplots, 1, height_ratios=height_ratios, hspace=0.1
-    )  # 整體間距縮減
+    )
 
-    # 波形圖佔據頂部
+    # Waveform plot at the top
     ax_waveform = fig.add_subplot(gs[0])
 
-    # 預測圖共用 x 軸
+    # Prediction plots share x-axis
     pred_axes = []
     for i in range(num_steps):
         if i == 0:
@@ -95,10 +88,10 @@ def plot_sample_for_steps(sample_id):
             ax = fig.add_subplot(gs[i + 1], sharex=pred_axes[0])
         pred_axes.append(ax)
 
-    # 創建時間軸（以秒為單位）
+    # Create time axis in seconds
     time_axis = np.arange(len(waveform_data[0])) / sample_rate
 
-    # 第一個子圖：波形圖（共用）
+    # First subplot: waveform plot
     ax_waveform.plot(
         time_axis, waveform_data[2], color="gray", label="E", linewidth=0.1
     )
@@ -116,15 +109,15 @@ def plot_sample_for_steps(sample_id):
     )
     ax_waveform.tick_params(axis="both", which="major", labelsize=12)
 
-    # 找到标签峰值
+    # Find label peaks
     label_p_peaks, _ = find_peaks(run_label_data[0], distance=100, height=confidence)
     label_s_peaks, _ = find_peaks(run_label_data[1], distance=100, height=confidence)
 
-    # 將峰值位置轉換為秒
+    # Convert peak positions to seconds
     label_p_peaks_time = label_p_peaks / sample_rate
     label_s_peaks_time = label_s_peaks / sample_rate
 
-    # 在波形图中添加 label peaks 的垂直线标记
+    # Add vertical lines for label peaks in waveform plot
     ax_waveform.vlines(
         label_p_peaks_time,
         ymin=-1,
@@ -144,16 +137,15 @@ def plot_sample_for_steps(sample_id):
 
     ax_waveform.legend(loc="upper right", fontsize=10, framealpha=0.7, ncol=2)
 
-    # 如果只有一個step，去掉波形圖的下邊框和x軸標籤
     if len(args.steps) == 1:
         ax_waveform.spines["bottom"].set_visible(False)
         ax_waveform.tick_params(axis="x", bottom=False, labelbottom=False)
 
-    # 為每個 step 創建預測圖
+    # Create prediction plots for each step
     for i, step in enumerate(args.steps):
         ax_pred = pred_axes[i]
 
-        # 加載預測數據
+        # Load prediction data
         if data_split == "track":
             pred_file = f"{base_path}/{data_split}/prediction/prediction_{step:0>7}.h5"
         else:
@@ -164,7 +156,7 @@ def plot_sample_for_steps(sample_id):
 
         pred_data = np.array(pred_data)
 
-        # 繪製標籤（在每個預測圖上）
+        # Plot labels on each prediction subplot
         ax_pred.plot(
             time_axis,
             run_label_data[0],
@@ -190,7 +182,7 @@ def plot_sample_for_steps(sample_id):
             alpha=0.7,
         )
 
-        # 繪製預測
+        # Plot predictions
         ax_pred.plot(
             time_axis,
             pred_data[0],
@@ -214,21 +206,18 @@ def plot_sample_for_steps(sample_id):
         )
 
         ax_pred.margins(x=0)
-        # 只顯示 step 信息在 y 軸標題
         ax_pred.set_ylabel(f"Step {step}", fontsize=10)
         ax_pred.tick_params(axis="both", which="major", labelsize=10)
 
-        # 隱藏除了最後一個子圖外的 x 軸標籤和刻度
+        # Hide x-axis labels and ticks for all but the last subplot
         if i < len(args.steps) - 1:
             ax_pred.tick_params(axis="x", labelbottom=False)
-            # 移除頂部邊框以創造無縫效果
             ax_pred.spines["bottom"].set_visible(False)
             ax_pred.tick_params(axis="x", bottom=False)
         else:
             ax_pred.set_xlabel("Time (seconds)", fontsize=14)
 
-        # 移除除了第一個和最後一個子圖外的上下邊框
-        # 如果只有一個step，則移除上邊框（像最後一張一樣）
+        # Remove borders for seamless appearance
         if len(args.steps) == 1:
             ax_pred.spines["top"].set_visible(False)
         elif i > 0:
@@ -236,41 +225,37 @@ def plot_sample_for_steps(sample_id):
         if i < len(args.steps) - 1:
             ax_pred.spines["bottom"].set_visible(False)
 
-        # 只在最後一個預測圖顯示圖例
+        # Show legend only on the last prediction plot
         if i == len(args.steps) - 1:
             ax_pred.legend(loc="center right", fontsize=9, framealpha=0.7, ncol=2)
 
-    # 如果指定了時間範圍，設置所有子圖的 x 軸範圍
+    # Set x-axis range if time range is specified
     if args.time_range is not None:
         start_time, end_time = args.time_range
         ax_waveform.set_xlim(start_time, end_time)
         for ax_pred in pred_axes:
             ax_pred.set_xlim(start_time, end_time)
 
-    # 使用 tight_layout 來優化整體布局，保持預測子圖寬度一致
     plt.tight_layout()
 
-    # 手動調整地震波圖片與第一個預測圖之間的間距
-    gs.update(hspace=0.08)  # 減少整體間距
+    # Adjust spacing between waveform and prediction plots
+    gs.update(hspace=0.08)
 
-    # 單獨增加波形圖與預測圖之間的間距（縮減一半）
     pos_waveform = ax_waveform.get_position()
     pos_first_pred = pred_axes[0].get_position()
 
-    # 向下移動預測圖區域（縮減間距）
+    # Fine-tune prediction plot positions
     for ax_pred in pred_axes:
         pos = ax_pred.get_position()
-        # 如果只有一個step，額外向下移動更多一點
         extra_offset = 0.02 if len(args.steps) == 1 else 0
         new_pos = [
             pos.x0,
             pos.y0 - 0.04 - extra_offset,
             pos.width,
             pos.height,
-        ]  # 向下移動 0.04（原來的一半）+ 單張圖額外偏移
+        ]
         ax_pred.set_position(new_pos)
 
-    # 儲存圖片 - 簡化檔名，不包含 steps
     if data_split == "track":
         save_path = os.path.join(base_path, data_split, output_folder)
     else:
@@ -292,8 +277,8 @@ def plot_sample_for_steps(sample_id):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run-id", type=str, required=True)
-    parser.add_argument("--sample-ids", type=int, nargs="+")
+    parser.add_argument("--run-id", type=str, required=True, help="MLflow run ID for the trained model")
+    parser.add_argument("--sample-ids", type=int, nargs="+", default=None, help="List of sample IDs to plot. If not specified, all samples will be plotted.")
     parser.add_argument(
         "--batch", type=int, default=0, help="Batch number for test data"
     )
@@ -305,6 +290,7 @@ if __name__ == "__main__":
         type=str,
         default="track",
         choices=["track", "train", "dev", "test"],
+        help="Data split to plot",
     )
     parser.add_argument(
         "--time-range",

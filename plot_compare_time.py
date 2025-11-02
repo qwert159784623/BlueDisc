@@ -181,9 +181,9 @@ def plot_waveform(sample_id):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run-id", type=str)
-    parser.add_argument("--max-steps", type=int, default=None)
-    parser.add_argument("--sample-ids", type=str)
+    parser.add_argument("--run-id", type=str, required=True, help="MLflow run ID for the trained model")
+    parser.add_argument("--max-steps", type=int, default=None, help="Maximum training steps to plot")
+    parser.add_argument("--sample-ids", type=str, default=None, help="Comma-separated list of sample IDs to plot (e.g., '0,1,2'). If not specified, all samples will be plotted.")
 
     args = parser.parse_args()
 

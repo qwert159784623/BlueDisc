@@ -295,20 +295,21 @@ def animate_sample():
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run-id", type=str, required=True)
-    parser.add_argument("--run-id2", type=str)
-    parser.add_argument("--run-id3", type=str)
-    parser.add_argument("--sample-ids", type=int, nargs="+")
+    parser.add_argument("--run-id", type=str, required=True, help="MLflow run ID for the trained model")
+    parser.add_argument("--run-id2", type=str, help="Second MLflow run ID for comparison")
+    parser.add_argument("--run-id3", type=str, help="Third MLflow run ID for comparison")
+    parser.add_argument("--sample-ids", type=int, nargs="+", help="List of sample IDs to plot")
     parser.add_argument(
         "--batch", type=int, default=0, help="Batch number for test data"
     )
-    parser.add_argument("--min-steps", type=int, default=0)
-    parser.add_argument("--max-steps", type=int, default=None)
+    parser.add_argument("--min-steps", type=int, default=0, help="Minimum step to start plotting from")
+    parser.add_argument("--max-steps", type=int, default=None, help="Maximum step to plot up to")
     parser.add_argument(
         "--data-split",
         type=str,
         default="track",
         choices=["track", "train", "dev", "test"],
+        help="Data split to plot",
     )
     parser.add_argument("--animation", action="store_true", help="Generate animation")
 

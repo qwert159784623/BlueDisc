@@ -16,11 +16,11 @@ from module.device_manager import DeviceManager
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--run-id", type=str, required=True)
+    parser.add_argument("--run-id", type=str, required=True, help="MLflow run ID for the trained model")
     parser.add_argument("--dataset", type=str, required=True, help="Dataset name available in seisbench dataset class name (e.g., ETHZ, InstanceCount)")
-    parser.add_argument("--step", type=int)
-    parser.add_argument("--epoch", type=int)
-    parser.add_argument("--device", type=str, default="auto")
+    parser.add_argument("--step", type=int, help="Checkpoint step to load")
+    parser.add_argument("--epoch", type=int, help="Checkpoint epoch to load")
+    parser.add_argument("--device", type=str, default="auto", help="Device to use for inference (e.g., 'cpu', 'cuda', 'auto')")
     parser.add_argument(
         "--data-split",
         type=str,

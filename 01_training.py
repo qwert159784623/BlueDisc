@@ -14,9 +14,6 @@ from module.device_manager import DeviceManager
 from module.pipeline import AugmentationsBuilder
 from module.random_seed import RandomSeedManager
 
-# Ensure web_host and web_port are initialized at the start
-web_host = "0.0.0.0"
-web_port = 8080
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()

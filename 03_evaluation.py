@@ -11,13 +11,14 @@ import mlflow
 from module.evaluator import get_picks, match_peaks_and_calculate_errors
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--run-id", type=str, required=True)
-parser.add_argument("--max-step", type=int)
+parser.add_argument("--run-id", type=str, required=True, help="MLflow run ID for the trained model")
+parser.add_argument("--max-step", type=int, help="Maximum step to evaluate")
 parser.add_argument(
     "--data-split",
     type=str,
     default="test",
     choices=["track", "train", "dev", "test"],
+    help="Data split to evaluate on",
 )
 
 args = parser.parse_args()

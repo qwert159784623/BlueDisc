@@ -2,11 +2,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seisbench.data as sbd
+import argparse
+
+parser = argparse.ArgumentParser(description='Plot P-wave and S-wave aligned waveforms')
+parser.add_argument('--source-index', type=int, default=20, help='Index of the source to select (default: 20)')
+args = parser.parse_args()
 
 data = sbd.InstanceCounts()
 
 source_counts = data.metadata['source_id'].value_counts()
-selected_source = source_counts.index[20]
+selected_source = source_counts.index[args.source_index]
 event_metadata = data.metadata[data.metadata['source_id'] == selected_source].copy()
 
 p_arrival_col = 'trace_p_arrival_sample' if 'trace_p_arrival_sample' in event_metadata.columns else 'trace_P_arrival_sample'
