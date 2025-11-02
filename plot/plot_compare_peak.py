@@ -34,7 +34,7 @@ def load_peak_data(run_id, data_split, max_step=None):
     """Load time error and height data for all steps of the specified run"""
     client = get_mlflow_client()
     experiment_id = client.get_run(run_id).info.experiment_id
-    base_path = f"/workspace/mlartifacts/{experiment_id}/{run_id}/artifacts"
+    base_path = f"mlruns/{experiment_id}/{run_id}/artifacts"
     matching_results_dir = os.path.join(base_path, data_split, "matching_results")
 
     if not os.path.exists(matching_results_dir):
@@ -545,7 +545,7 @@ def get_save_path(args, run_id):
 
     client = get_mlflow_client()
     experiment_id = client.get_run(run_id).info.experiment_id
-    base_path = f"/workspace/mlartifacts/{experiment_id}/{run_id}/artifacts"
+    base_path = f"mlruns/{experiment_id}/{run_id}/artifacts"
     return os.path.join(base_path, args.data_split, "matching_results")
 
 

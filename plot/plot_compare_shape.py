@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import sys
 
@@ -42,7 +41,7 @@ def plot_sample_for_steps(sample_id):
     output_folder = "sample_plot"
     batch = args.batch
 
-    base_path = f"/workspace/mlartifacts/{experiment_id}/{args.run_id}/artifacts"
+    base_path = f"mlruns/{experiment_id}/{args.run_id}/artifacts"
     output_path = os.path.join(base_path, args.data_split, output_folder)
     os.makedirs(output_path, exist_ok=True)
 

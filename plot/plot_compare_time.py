@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import sys
 
@@ -198,7 +197,7 @@ if __name__ == "__main__":
     experiment_name = client.get_experiment(experiment_id).name
     training_dataset = current_run.data.params["dataset"]
 
-    base_path = f"/workspace/mlartifacts/{experiment_id}/{run_id}/artifacts"
+    base_path = f"mlruns/{experiment_id}/{run_id}/artifacts"
 
     sample_rate = 100
     time_threshold = 0.1  # in seconds

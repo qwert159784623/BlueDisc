@@ -1,5 +1,4 @@
 import argparse
-import json
 import os
 import subprocess
 import sys
@@ -122,7 +121,7 @@ def plot_sample(
         experiment_name = client.get_experiment(experiment_id).name
 
         # Get current run path
-        run_base_path = f"/workspace/mlartifacts/{experiment_id}/{run_id}/artifacts"
+        run_base_path = f"mlruns/{experiment_id}/{run_id}/artifacts"
 
         # Plot labels
         ax_label.plot(
@@ -340,7 +339,7 @@ if __name__ == "__main__":
         output_folder = "compare_plot"
         batch = args.batch
 
-        base_path = f"/workspace/mlartifacts/{experiment_id}/{first_run_id}/artifacts"
+        base_path = f"mlruns/{experiment_id}/{first_run_id}/artifacts"
         output_path = os.path.join(base_path, args.data_split, output_folder)
         os.makedirs(output_path, exist_ok=True)
 

@@ -9,7 +9,6 @@ import h5py
 import mlflow
 
 from module.evaluator import get_picks, match_peaks_and_calculate_errors
-from module.parallel import parallel
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--run-id", type=str, required=True)
@@ -23,17 +22,14 @@ parser.add_argument(
 
 args = parser.parse_args()
 
-with open("/workspace/hosts.json", "r") as f:
-    hosts = json.load(f)
-
-mlflow_host = hosts.get("mlflow_host", "0.0.0.0")
-mlflow_port = hosts.get("mlflow_port", 5000)
+mlflow_host = '0.0.0.0'
+mlflow_port = 5000
 
 run_id = args.run_id
 client = mlflow.MlflowClient(f"http://{mlflow_host}:{mlflow_port}")
 experiment_id = client.get_run(run_id).info.experiment_id
 experiment_name = client.get_experiment(experiment_id).name
-base_path = f"/workspace/mlartifacts/{experiment_id}/{run_id}/artifacts"
+base_path = f"mlruns/{experiment_id}/{run_id}/artifacts"
 
 data_split = args.data_split
 os.makedirs(os.path.join(base_path, data_split), exist_ok=True)
@@ -114,5 +110,5 @@ def process_step(step):
     sys.stdout.flush()
 
 
-steps = range(max_step)
-parallel(steps, process_step, cpu_count=os.cpu_count())
+for step in range(max_step):
+    process_step(step)
