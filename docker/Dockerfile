@@ -8,8 +8,7 @@ RUN apt-get update && apt-get upgrade -y; \
     apt-get install -y \
     curl git htop sudo vim wget build-essential ffmpeg jq
 
-# Install conda package
-COPY docker/conda_requirements.txt /tmp/
+# Update conda
 RUN conda update -y conda;
 
 # Install python package
