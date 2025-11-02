@@ -70,5 +70,8 @@ Outputs are saved under `mlruns/<experiment>/<run_id>/artifacts/` (waveforms, la
 - `module/`: generator (PhaseNet wrapper), discriminator (BlueDisc), GAN training loop, data pipeline, logger
 - `mlruns/`: MLflow experiments and artifacts
 - `docs/`: short documentation
+- `loss_landscape/`: standalone loss-landscape simulations (BCE toy experiments)
+  - `loss_landscape_analysis.py`: BCE loss surface visualization (height vs. time/peak)
+  - `no_model_bce_test.py`: point-wise vs Gaussian-parameterized BCE optimization
 
 For CLI details, tips, and caveats, see `docs/README.md`. Please cite the paper when using this code.
