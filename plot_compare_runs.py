@@ -304,7 +304,7 @@ if __name__ == "__main__":
         "--batch", type=int, default=0, help="Batch number for test data"
     )
     parser.add_argument("--min-steps", type=int, default=0)
-    parser.add_argument("--max-steps", type=int, default=1000)
+    parser.add_argument("--max-steps", type=int, default=None)
     parser.add_argument(
         "--data-split",
         type=str,
@@ -319,21 +319,33 @@ if __name__ == "__main__":
     mlflow_port = 5000
     client = mlflow.MlflowClient(f"http://{mlflow_host}:{mlflow_port}")
 
-    if args.data_split == "track":
-        max_sample = 100
-    else:
-        max_sample = 1000
+    # Get run info once at the beginning
+    first_run_id = args.run_id
+    current_run = client.get_run(first_run_id)
+    experiment_id = current_run.info.experiment_id
+    experiment_name = client.get_experiment(experiment_id).name
+    training_dataset = current_run.data.params["dataset"]
 
+    # Auto-detect max_sample from trace_name file if sample_ids not specified
     if args.sample_ids is None or len(args.sample_ids) == 0:
+        trace_name_file = f"mlruns/{experiment_id}/{first_run_id}/artifacts/{args.data_split}/trace_name/trace_name_0000000.txt"
+
+        if os.path.exists(trace_name_file):
+            with open(trace_name_file, 'r') as f:
+                lines = [line.strip() for line in f if line.strip()]  # Count non-empty lines
+            max_sample = len(lines)
+            print(f"Auto-detected {max_sample} samples from trace_name file")
+        else:
+            # Fallback to default values
+            if args.data_split == "track":
+                max_sample = 100
+            else:
+                max_sample = 1000
+            print(f"Trace name file not found. Using default max_sample={max_sample}")
+
         args.sample_ids = range(0, max_sample)
 
     for sample_id in args.sample_ids:
-        # Use first run to set basic parameters and paths
-        first_run_id = args.run_id
-        current_run = client.get_run(first_run_id)
-        experiment_id = current_run.info.experiment_id
-        experiment_name = client.get_experiment(experiment_id).name
-        training_dataset = current_run.data.params["dataset"]
 
         data_split = args.data_split
         output_folder = "compare_plot"
@@ -342,6 +354,41 @@ if __name__ == "__main__":
         base_path = f"mlruns/{experiment_id}/{first_run_id}/artifacts"
         output_path = os.path.join(base_path, args.data_split, output_folder)
         os.makedirs(output_path, exist_ok=True)
+
+        # Auto-detect max_steps if not specified
+        if args.max_steps is None:
+            import glob
+            import re
+            prediction_path = os.path.join(base_path, data_split, "prediction")
+            if os.path.exists(prediction_path):
+                prediction_files = glob.glob(os.path.join(prediction_path, "prediction_*.h5"))
+                if prediction_files:
+                    # Extract step numbers from filenames
+                    step_numbers = []
+                    for f in prediction_files:
+                        match = re.search(r'prediction_(\d+)\.h5', os.path.basename(f))
+                        if match:
+                            step_numbers.append(int(match.group(1)))
+
+                    if step_numbers:
+                        # Files are numbered from 0 consecutively
+                        # max_steps is exclusive upper bound for range()
+                        # So if we have 100 files (0-99), max_steps = 100
+                        max_steps = len(prediction_files)
+                        print(f"Auto-detected {len(prediction_files)} prediction files.")
+                        print(f"Step numbers: {min(step_numbers)} to {max(step_numbers)}")
+                        print(f"Using range({args.min_steps}, {max_steps})")
+                    else:
+                        max_steps = 1000
+                        print(f"Could not parse step numbers from files. Using default max_steps={max_steps}")
+                else:
+                    max_steps = 1000
+                    print(f"No prediction files found. Using default max_steps={max_steps}")
+            else:
+                max_steps = 1000
+                print(f"Prediction path not found: {prediction_path}. Using default max_steps={max_steps}")
+        else:
+            max_steps = args.max_steps
 
         sample_rate = 100
         time_threshold = 0.1  # in seconds
@@ -360,7 +407,7 @@ if __name__ == "__main__":
         with h5py.File(label_file, "r") as f:
             run_label_data = f["data"][sample_id]
 
-        for step in range(args.min_steps, args.max_steps):
+        for step in range(args.min_steps, max_steps):
             plot_sample(step)
 
         if args.animation:
