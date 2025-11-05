@@ -128,9 +128,6 @@ Please cite the paper when using this code:
 }
 ```
 
-## Code Contributors
-- Chun-Ming Huang
-
 ## References
 
 Key papers referenced in this work:
